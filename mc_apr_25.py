@@ -13,6 +13,7 @@ from datetime import datetime
 import folium
 import os
 import sys
+from collections import Counter
 # ------
 import json
 import base64
@@ -81,7 +82,7 @@ report_year = datetime(2025, 4, 1).strftime("%Y")
 # print(df)
 # print(df[["Date of Activity", "Total travel time (minutes):"]])
 # print('Total Marketing Events: ', len(df))
-print('Column Names: \n', df.columns.tolist())
+# print('Column Names: \n', df.columns.tolist())
 # print('DF Shape:', df.shape)
 # print('Dtypes: \n', df.dtypes)
 # print('Info:', df.info())
@@ -129,13 +130,16 @@ columns =  [
 # Rename columns
 df.rename(
     columns={
-        # "Which MarCom activity category are you submitting an entry for?": "MarCom Activity",
-        "What type of MARCOM activity are you reporting?": "MarCom Activity",
-        "Purpose of the activity (please only list one):": "Purpose",
-        "Please select the type of product(s):": "Product Type",
+        "What type of MARCOM activity are you reporting?": "MC Activity",
         "Activity Duration (minutes):": "Activity Duration",
         "Total travel time (minutes):": "Travel",
         "Person submitting this form:": "Person",
+        "BMHC Activity:" : "BMHC Activity",
+        "Care Network Activity:" : "Care Activity",
+        "Community Outreach Activity:" : "Outreach Activity",
+        "Community Education Activity:" : "Education Activity",
+        "Activity Status" : "Activity Status",
+        "Entity Name:" : "Entity",
     }, 
 inplace=True)
 
@@ -193,14 +197,14 @@ mc_travel = round(mc_travel)
 # --------------------------- MarCom Activity -------------------------- #
 
 # Group by "Which MarCom activity category are you submitting an entry for?"
-df_activities = df.groupby('MarCom Activity').size().reset_index(name='Count')
+df_activities = df.groupby('MC Activity').size().reset_index(name='Count')
 # print('Activities:\n', df_activities)
 
 activity_bar=px.bar(
     df_activities,
-    x='MarCom Activity',
+    x='MC Activity',
     y='Count',
-    color='MarCom Activity',
+    color='MC Activity',
     text='Count',
 ).update_layout(
     height=600, 
@@ -258,7 +262,7 @@ activity_bar=px.bar(
 # Person Pie Chart
 activity_pie=px.pie(
     df_activities,
-    names="MarCom Activity",
+    names="MC Activity",
     values='Count'  # Specify the values parameter
 ).update_layout(
     height=600,
@@ -453,450 +457,632 @@ status_pie=px.pie(
     hovertemplate='<b>%{label} Status</b>: %{value}<extra></extra>',
 )
 
-# --------------------------- Products Graphs -------------------------- #
+# --------------------------- BMHC Activity -------------------------- #
 
-# data = [
-#     '', 'Administrative Task', 'Announcement', 'Branding', 'Editing/ Proofing/ Writing', 'Internal Communications, \tMeetings with Internal BMHC Teammember or Team\t1\tOrganizational Activity\tOrganizational Efficiency\tMeeting - Communications\t\t\t\t\t\tMeetings with Internal BMHC Teammember or Team\t1\tOrganizational Activity\tOrganizational Efficiency\tMeeting- Communications', 'MARCOM Check in meeting', 'Marketing', 'Meeting', 'Meeting, Presentation', 'Newsletter', 'Newsletter Archive', 'Newsletter, Writing, Editing, Proofing', 'No Product', 'No Product - Event Support', 'No Product - Internal Communications', 'No product', 'No product - Board Support', 'No product - organizational efficiency', 'No product - organizational strategy', 'No product - organizational strategy meeting', 'No product- organizational strategy', 'No product- troubleshooting', 'Non product - Board Support', 'Organizational Support', 'Presentation', 'Press Release PDF Folder', 'Social Media', 'Social Media Post', 'Update Center of Excellence for Youth Logo', 'Updates', 'Website Updates/Newsletter Archive', 'Website updates', 'newsletter archive', 'sent logo to Director of Outreach', 'website updates'
-#         ]
+# print("BMHC Activity Unique Before:", df["BMHC Activity"].unique().tolist())
 
+bmhc_activity_unique = [
+'Add/ Review Content', 'Website Troubleshooting', 'Organization', 'Organizational Efficiency', 'Impact Metrics', 'Care Network Related Strategy', 'Communications Support', 'Communication & Correspondence', 'Research & Planning', 'Organization Strategy', 'Record Keeping & Documentation', 'Key or Special Event Support', 'BMHC Co-Branding', 'Marketing Promotion', 'Update Newsletter', 'Compliance & Policy Enforcement', 'Office Management'
+]
 
-# df['Product Type'] = (
-#     df['Product Type']
-#     .str.strip()
-#     .replace(
-#         {
-#             # No Product
-#             'No Product': "No Product",
-#             'No Product - Board Support': "No Product",
-#             'No Product - Branding Activity': "No Product",
-#             'No Product - Co-branding in General': "No Product",
-#             'No Product - Event Support': "No Product",
-#             'No Product - Internal Communications': "No Product",
-#             'No product': "No Product",
-#             'No product - Board Support': "No Product",
-#             'No product - Communications Support': "No Product",
-#             'No product - Community Collaboration': "No Product",
-#             'No product - Event Support': "No Product",
-#             'No product - Gathering Testimonials': "No Product",
-#             'No product - Human Resources Training for Organizational Efficiency': "No Product",
-#             'No product - Human Resources for Efficiency': "No Product",
-#             'No product - Organizational Efficiency': "No Product",
-#             'No product - Organizational Strategy': "No Product",
-#             'No product - organizational efficiency': "No Product",
-#             'No product - organizational strategy': "No Product",
-#             'No product - organizational strategy meeting': "No Product",
-#             'No product- organizational strategy': "No Product",
-#             'No product- troubleshooting': "No Product",
-#             'Non product - Board Support': "No Product",
-#             '': "No Product",  # blank entries
+bmhc_activity_categories = [
+    "Communication & Correspondence",
+    "Compliance & Policy Enforcement",
+    "HR Support",
+    "Office Management",
+    "Record Keeping & Documentation",
+    "Research & Planning"
+]
 
-#             # Meeting
-#             'Meeting': "Meeting",
-#             'Meeting - Communications': "Meeting",
-#             'Meeting - Impact Report': "Meeting",
-#             'Meeting - Social Media': "Meeting",
-#             'Meeting with Areebah': "Meeting",
-#             'Meeting with Director Pamela Parker': "Meeting",
-#             'MarCom Impact Report Meeting': "Meeting",
-#             'meeting with Pamela': "Meeting",
-#             'BMHC Board Meeting': "Meeting",
-#             'Key Leader Huddle': "Meeting",
-#             'Key Leaders Huddle': "Meeting",
-#             'Key Leaders Meeting': "Meeting",
-#             'Quarterly Team Meeting': "Meeting",
-#             'BMHC and Americorp Logo Requirements meeting': "Meeting",
-#             'MARCOM Check in meeting': "Meeting",
-#             'Meeting, Presentation': "Meeting",
-#             'Internal Communications, \tMeetings with Internal BMHC Teammember or Team\t1\tOrganizational Activity\tOrganizational Efficiency\tMeeting - Communications\t\t\t\t\t\tMeetings with Internal BMHC Teammember or Team\t1\tOrganizational Activity\tOrganizational Efficiency\tMeeting- Communications': "Meeting",
+df['BMHC Activity'] = (
+    df['BMHC Activity']
+    .str.strip()
+    .replace({
+        "" : "",
+    })
+)
 
-#             # Newsletter
-#             'Newsletter': "Newsletter",
-#             'Newsletter,': "Newsletter",
-#             'Newsletter Archive': "Newsletter",
-#             'newsletter archive': "Newsletter",
-#             'Website Updates/Newsletter Archive': "Newsletter",
-#             'Newsletter, Writing, Editing, Proofing': "Newsletter",
-#             'Newsletter, Started Social Media and Newsletter Benchmarking': "Newsletter",
-#             'Newsletter, edit Social Media and Newsletter Benchmarking': "Newsletter",
+# Identify unexpected/unapproved categories
+bmhc_unexpected = df[~df['BMHC Activity'].isin(bmhc_activity_categories)]
+# print("BMHC Activity Unexpected: \n", bmhc_unexpected['BMHC Activity'].unique().tolist())
 
-#             # Presentation
-#             'Presentation': "Presentation",
-#             'Presentation, Started Impact Report Presentation': "Presentation",
-#             'Marcom Report': "Presentation",
+# print("BMHC Activity Unique After:", df["BMHC Activity"].unique().tolist())
 
-#             # Scheduling
-#             'Scheduled ACC Tax help with Areebah': "Scheduling",
-#             'Scheduled Open Board Appointments and Man in Me Posts with Areebah': "Scheduling",
+# Product Type dataframe:
+bmhc_activity = df.groupby('BMHC Activity').size().reset_index(name='Count')
 
-#             # Updates
-#             'Updates': "Updates",
-#             'Website updates': "Updates",
-#             'Website Updates': "Updates",
-#             'updated - Board RFIs - January 2025': "Updates",
-#             'updated Board Due Outs file': "Updates",
-#             'Updated Marcom Data for December': "Updates",
-#             'Updated verbiage for MLK Social Media post': "Updates",
-#             'Update BMHC Service Webpage images': "Updates",
-#             'Updated ACC Student Video Post': "Updates",
-#             'Updated Felicia Chandler headshot in Photoshop for Website': "Updates",
-#             'Updated and Approve ACC Student Video Post': "Updates",
-#             'update and approved Organization chart': "Updates",
-#             'updated Red Card': "Updates",
-#             'updated and approved Red Card': "Updates",
-#             'website updates': "Updates",
+bmhc_bar=px.bar(
+    bmhc_activity,
+    x='BMHC Activity',
+    y='Count',
+    color='BMHC Activity',
+    text='Count',
+).update_layout(
+    height=990, 
+    width=1700,
+    title=dict(
+        text=f'{current_month} BMHC Activity',
+        x=0.5, 
+        font=dict(
+            size=25,
+            family='Calibri',
+            color='black',
+            )
+    ),
+    font=dict(
+        family='Calibri',
+        size=18,
+        color='black'
+    ),
+    xaxis=dict(
+        tickangle=-15,
+        tickfont=dict(size=18),  
+        title=dict(
+            # text=None,
+            text="Product",
+            font=dict(size=20), 
+        ),
+        showticklabels=False  
+        # showticklabels=True  
+    ),
+    yaxis=dict(
+        title=dict(
+            text='Count',
+            font=dict(size=20), 
+        ),
+    ),
+    legend=dict(
+        # title='Support',
+        title_text='',
+        orientation="v",  # Vertical legend
+        x=1.05,  # Position legend to the right
+        y=1,  # Position legend at the top
+        xanchor="left",  # Anchor legend to the left
+        yanchor="top",  # Anchor legend to the top
+        # visible=False
+        visible=True
+    ),
+    hovermode='closest', # Display only one hover label per trace
+    bargap=0.08,  # Reduce the space between bars
+    bargroupgap=0,  # Reduce space between individual bars in groups
+    margin=dict(t=50, r=50, b=30, l=40),  # Remove margins
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+)
 
-#             # Student-related activities
-#             'Came up with social media verbiage for Student Videos': "Student-related activity",
-#             'Reviewed Student Videos': "Student-related activity",
-#             'Worked on Video Inquiry and verbiage for ACC and UT': "Student-related activity",
-#             'Started SQL Certificates': "Student-related activity",
+# Person Pie Chart
+bmhc_pie=px.pie(
+    bmhc_activity,
+    names="BMHC Activity",
+    values='Count'  # Specify the values parameter
+).update_layout(
+    height=950,
+    width=1700,
+    title=f'{current_month} Ratio of BMHC Activity',
+    title_x=0.5,
+    font=dict(
+        family='Calibri',
+        size=17,
+        color='black'
+    )
+).update_traces(
+    rotation=90,
+    textposition='auto',
+    # textinfo='none',
+    textinfo='value+percent',
+    hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
+)
 
-#             # Social Media
-#             'Social Media': "Social Media",
-#             'Social Media Post': "Social Media",
-#             'approved and scheduled UT PhARM Social Media Post': "Social Media",
-#             'sent Areebah a schedule posts list from the Newsletter': "Social Media",
-#             'Man and Me schedule and post': "Social Media",
-#             'BMHC PSA Videos Project': "Social Media",
+# ============================ Care Network Activity ================================ #
 
-#             # Editing/ Proofing/ Writing
-#             'Editing/ Proofing/ Writing': "Editing/ Proofing/ Writing",
-#             'Writing, Editing, Proofing': "Editing/ Proofing/ Writing",
-#             'created and updated Center of Excellence for Youth Mental Health logo': "Editing/ Proofing/ Writing",
-#             'Gathered and sent Previous Meeting Minutes': "Editing/ Proofing/ Writing",
-#             'Sustainability Binder': "Editing/ Proofing/ Writing",
-#             'MarCom Playbook': "Editing/ Proofing/ Writing",
-#             'provided board minutes for audit': "Editing/ Proofing/ Writing",
+# print("Care Activity Unique Before: \n", df["Care Activity"].unique().tolist()) 
 
-#             # Branding
-#             'Branding': "Branding",
-#             'AmeriCorp Logo': "Branding",
-#             'AmeriCorps Responsibility': "Branding",
-#             'Co-branding in general': "Branding",
-#             'Update Center of Excellence for Youth Logo': "Branding",
-#             'sent logo to Director of Outreach': "Branding",
+care_activity_unique = [
+'Website Updates', 'Meeting', 'Internal Communications', 'No Product - Organizational Efficiency', 'No product - organizational strategy', 'Community Collaboration', 'Organizational Support', 'No Product - Organizational Support', 'Human Resources Training for Efficiency', 'Clinical Provider', 'Workforce Development', 'Special Announcement', 'AmeriCorps Responsibility', 'no product', 'MarCom Report', 'Distribution list', 'Announcement', 'Government', 'Internal Communications, No Product - Organizational Efficiency', 'No Product - Organizational Efficiency,', 'Timesheet', 'Event Support-Catering', 'Event Support', 'Marcom Report', 'No product- Organizational Efficiency', 'no product- organization efficiency', 'Newsletter', 'Flyer', 'Internal Communications, Meeting', 'Organizational Efficiency', 'Co-Branding, Community Collaboration, Planning - BMHC - Austin Public Health - Sustainable Foods Prostate Cancer Class: Thursday, April 24th at Metropolitan A.M.E.', 'Mental Hellness - The Bartley Method - video editing', 'no product - organizational efficiency', 'no product - Organizational Efficiency', 'Co-Branding, Flyer', 'Archive list', 'No product', 'MarCom Impact Report', 'Writing, Editing, Proofing', 'Social Media Post', 'Flyer, Registration for prostate cancer class', 'Promotion', 'Organized press release pdfs', 'Academic', 'SDoH Provider'
+]
 
-#             # Marketing
-#             'Marketing': "Marketing",
-#             'Announcement': "Marketing",
-#             'Community Radio PSA/Promos': "Marketing",
-#             'Flyer': "Marketing",
-#             'Please Push - Board Member Garza': "Marketing",
-#             'Please Push - Community Health Worker position': "Marketing",
-#             'Press Release': "Marketing",
-#             'Press Release PDF Folder': "Marketing",
+care_activity_categories = [
+    "Academic",
+    "Clinical Provider",
+    "Give Back Program",
+    "Government",
+    "Religious",
+    "SDoH Provider",
+    "Workforce Development"
+]
 
-#             # Administrative Task
-#             'Administrative Task': "Administrative Task",
-#             'Created Certificate Order Guide': "Administrative Task",
-#             'Move all files to BMHC Canva': "Administrative Task",
-#             'Organizational Support': "Administrative Task",
-#             'Organizational Efficiency': "Administrative Task",
-#             'Timesheet': "Administrative Task",
+df['Care Activity'] = (
+    df['Care Activity']
+    .str.strip()
+    .replace({
+        "" : "",
+    })
+)
 
-#             # Other
-#             'created Red Card': "Design",
-#             'Report': "Report",
-#             'Impact Report': "Impact Report",
-#         }
-#     )
-# )
+# normalized_categories = {cat.lower().strip(): cat for cat in _categories}
+# counter = Counter()
 
-# # Product Type dataframe:
-# df_product_type = df.groupby('Product Type').size().reset_index(name='Count')
-# # print("Product Unique", df_product_type["Product Type"].unique().tolist())
+# for entry in df['Support']:
+#     items = [i.strip().lower() for i in entry.split(",")]
+#     for item in items:
+#         if item in normalized_categories:
+#             counter[normalized_categories[item]] += 1
 
-# product_bar=px.bar(
-#     df_product_type,
-#     x='Product Type',
-#     y='Count',
-#     color='Product Type',
-#     text='Count',
-# ).update_layout(
-#     height=990, 
-#     width=1700,
-#     title=dict(
-#         text='Product Type',
-#         x=0.5, 
-#         font=dict(
-#             size=25,
-#             family='Calibri',
-#             color='black',
-#             )
-#     ),
-#     font=dict(
-#         family='Calibri',
-#         size=18,
-#         color='black'
-#     ),
-#     xaxis=dict(
-#         tickangle=-15,  # Rotate x-axis labels for better readability
-#         tickfont=dict(size=18),  # Adjust font size for the tick labels
-#         title=dict(
-#             # text=None,
-#             text="Product",
-#             font=dict(size=20),  # Font size for the title
-#         ),
-#         showticklabels=False  # Hide x-tick labels
-#         # showticklabels=True  # Hide x-tick labels
-#     ),
-#     yaxis=dict(
-#         title=dict(
-#             text='Count',
-#             font=dict(size=20),  # Font size for the title
-#         ),
-#     ),
-#     legend=dict(
-#         # title='Support',
-#         title_text='',
-#         orientation="v",  # Vertical legend
-#         x=1.05,  # Position legend to the right
-#         y=1,  # Position legend at the top
-#         xanchor="left",  # Anchor legend to the left
-#         yanchor="top",  # Anchor legend to the top
-#         # visible=False
-#         visible=True
-#     ),
-#     hovermode='closest', # Display only one hover label per trace
-#     bargap=0.08,  # Reduce the space between bars
-#     bargroupgap=0,  # Reduce space between individual bars in groups
-# ).update_traces(
-#     textposition='auto',
-#     hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
-# )
+# # Display the result
+# # for category, count in counter.items():
+# #     print(f"Support Counts: \n {category}: {count}")
 
-# # Person Pie Chart
-# product_pie=px.pie(
-#     df_product_type,
-#     names="Product Type",
-#     values='Count'  # Specify the values parameter
-# ).update_layout(
-#     height=950,
-#     width=1700,
-#     title='Product Type Percentages',
-#     title_x=0.5,
-#     font=dict(
-#         family='Calibri',
-#         size=17,
-#         color='black'
-#     )
-# ).update_traces(
-#     rotation=0,
-#     textposition='auto',
-#     # textinfo='none',
-#     textinfo='value+percent',
-#     hovertemplate='<b>%{label} Status</b>: %{value}<extra></extra>',
-# )
+# df_ = pd.DataFrame(counter.items(), columns=['', 'Count']).sort_values(by='Count', ascending=False)
 
-# ============================ Purpose ================================ #
+# Identify unexpected/unapproved categories
+care_unexpected = df[~df['Care Activity'].isin(care_activity_categories)]
+# print("Care Activity Unexpected: \n", care_unexpected['Care Activity'].unique().tolist())
 
-# # print("Purpose Unique:", df_purpose["Purpose"].unique().tolist())
+# print("Care Activity Unique After:", df["Care Activity"].unique().tolist())
 
-# purpose_unique = [
-#     'Add/ Review Content', 
-#     'Add/Review Content', 
-#     'Adding Content',
-#     'Adding/Reviewing Content', 
-#     'Adding/reviewing Content', 
-#     'Adding/reviewing content',
-#     'BMHC Board Advisory Committee', 
-#     'BMHC Co-Branding',
-#     'BMHC PSA Videos Project',
-#     'Care Network Related Strategy',
-#     'Communications Support',
-#     'General Communications Emails with Social Media Team - providing social links to Bristol Myers about the Harvard Law Press Release', 
-#     'General Health Awareness Activity',
-#     'Health Awareness & ED Public Information', 
-#     'Health Awareness & Ed Public Information', 
-#     'Impact Metrics', 'Key Leader Huddle', 
-#     'Key or Special Event Support', 
-#     'MARCOM Check in meeting', 
-#     'Marcom Presentation Meeting', 
-#     'Marketing Analysis', 
-#     'Marketing Promotion',
-#     'Onboarding or Hiring Staff', 'Organization', 
-#     'Organization Strategy', 
-#     'Organizational Activity', 
-#     'Organizational Activity - Board Support',
-#     'Organizational Collaboration', 
-#     'Organizational Efficiency', 
-#     'Organizational Strategy', 
-#     'Research Website plugins', 
-#     'Schedule Measle Post',
-#     'Scheduled Military Affiliated Job Post', 
-#     'Special Event Execution', 
-#     'Sustainability Binder',
-#     'Timesheet', 
-#     'Training', 
-#     'Update Newsletter', 
-#     'Updated Marcom Presentation', 
-#     'Uploading PDFs to Drive', 
-#     'Website Troubleshooting', 'Working with IT to get content up', 
-#     'sent logo to Director of Outreach'
-# ]
+# Product Type dataframe:
+care_activity = df.groupby('Care Activity').size().reset_index(name='Count')
 
-# df['Purpose'] = (
-#     df['Purpose']
-#     .str.strip()
-#     .replace(
-#         {
-#             # Add/Review Content
-#             'Add/ Review Content': 'Add/Review Content',
-#             'Add/Review Content': 'Add/Review Content',
-#             'Adding Content': 'Add/Review Content',
-#             'Adding/Reviewing Content': 'Add/Review Content',
-#             'Adding/reviewing Content': 'Add/Review Content',
-#             'Adding/reviewing content': 'Add/Review Content',
+care_bar = px.bar(
+    care_activity,
+    x='Care Activity',
+    y='Count',
+    color='Care Activity',
+    text='Count',
+).update_layout(
+    height=990, 
+    width=1700,
+    title=dict(
+        text=f'{current_month} Care Activities',
+        x=0.5, 
+        font=dict(
+            size=25,
+            family='Calibri',
+            color='black',
+        )
+    ),
+    font=dict(
+        family='Calibri',
+        size=18,
+        color='black'
+    ),
+    xaxis=dict(
+        tickangle=-15,
+        tickfont=dict(size=18),  
+        title=dict(
+            text="Product",
+            font=dict(size=20), 
+        ),
+        showticklabels=False
+    ),
+    yaxis=dict(
+        title=dict(
+            text='Count',
+            font=dict(size=20), 
+        ),
+    ),
+    legend=dict(
+        title_text='',
+        orientation="v",
+        x=1.05,
+        y=1,
+        xanchor="left",
+        yanchor="top",
+        visible=True
+    ),
+    hovermode='closest',
+    bargap=0.08,
+    bargroupgap=0,
+    margin=dict(t=50, r=50, b=30, l=40),
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+)
 
-#             # BMHC
-#             'BMHC Board Advisory Committee': 'BMHC Activity',
-#             'BMHC Co-Branding': 'BMHC Activity',
-#             'BMHC PSA Videos Project': 'BMHC Activity',
+# Person Pie Chart
+care_pie = px.pie(
+    care_activity,
+    names="Care Activity",
+    values='Count'
+).update_layout(
+    height=950,
+    width=1700,
+    title=f'{current_month} Ratio of Care Activities',
+    title_x=0.5,
+    font=dict(
+        family='Calibri',
+        size=17,
+        color='black'
+    )
+).update_traces(
+    rotation=90,
+    textposition='auto',
+    textinfo='value+percent',
+    hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
+)
 
-#             # Communications
-#             'Communications Support': 'Communications',
-#             'General Communications Emails with Social Media Team - providing social links to Bristol Myers about the Harvard Law Press Release': 'Communications',
+# ============================ Outreach Activity ================================ #
 
-#             # Health Awareness
-#             'General Health Awareness Activity': 'Health Awareness',
-#             'Health Awareness & ED Public Information': 'Health Awareness',
-#             'Health Awareness & Ed Public Information': 'Health Awareness',
+# print("Outreach Activity Unique Before: \n", df["Outreach Activity"].unique().tolist())
 
-#             # Metrics
-#             'Impact Metrics': 'Impact & Metrics',
+outreach_activity_unique = [
+'', 'Created special HTML BMHC Announcement of the CommUnity Care Clinic Measles Clinic in MailChimp', 'Updated email distribution list for special HTML BMHC Announcement of the CommUnity Care Clinic Measles Clinic', 'Health awareness, equity, tips, and services info for the public', 'No Product - Organizational Human Resources Support', 'Event (in-person), Social Media Post, Visuals', 'None', 'Visuals', 'Vector Logo', 'Timesheet', 'Overcoming Mental Hellness logo', 'PSA/ Commercial', 'Blogs', 'DACC Meeting', 'Newsletter plan', 'Social Media Post, schedule SWAD post', 'Newsletter/ Social Media Analytics', 'BMHC Services', 'Social Media Post, Shared partner post with Areebah', 'meeting with Areebah', 'Social Media Post, schedule CUC post on social media', 'Social Media Post', 'Quarterly Team Meeting', 'Updated Newsletter', 'Visuals, updated food sustainable flyer , created Mr. Larry Wallace Sr. Congratulations flyer , Stress Awareness flyer', 'updated Overcoming Mental Hellness Logo', 'Website Updates', 'Special Event planning', 'Event (in-person)', 'Website', 'Event Logistics', 'Key Event Logistics', 'Videography', 'Event (in-person), Special events set up', 'purchase food for special events', 'Social Media Post, Visuals', 'Updated the March Impact Report', 'updated Q2 Report', 'Social Media Post, update Social Media Coverage page visual', 'Visuals, update board slide', 'Visuals, Updated the March Impact Report', 'Visuals, Updated Bartley’s Way Documents', 'Created the Q2 Board Member Meeting slides', 'updated Military slides', 'Meeting with Areebah', 'meeting with Carlos Bautista', 'Updated Q2 Report', 'Key Leader Meeting', 'Created and sent Newsletter Plan or 4/25', 'Visuals, updated and sent DACC flyer for approval', 'updated newsletter', 'Social Media Post, reviewed partner posts of social media', 'Key Leader huddle'
+]
 
-#             # Leadership/Meetings
-#             'Key Leader Huddle': 'Leadership Meeting',
-#             'Marcom Presentation Meeting': 'Leadership Meeting',
-#             'MARCOM Check in meeting': 'Leadership Meeting',
+outreach_activity_categories = [
+    "Event (in-person)",
+    "Handouts",
+    "Press Releases",
+    "PSA/ Commercial",
+    "Social Media Post",
+    "Videography",
+    "Visuals",
+    "Website"
+]
 
-#             # Events
-#             'Key or Special Event Support': 'Special Event Support',
-#             'Special Event Execution': 'Special Event Support',
+df['Outreach Activity'] = (
+    df['Outreach Activity']
+    .str.strip()
+    .replace({
+        "" : "",
+    })
+)
 
-#             # Marketing
-#             'Marketing Analysis': 'Marketing',
-#             'Marketing Promotion': 'Marketing',
+# normalized_categories = {cat.lower().strip(): cat for cat in _categories}
+# counter = Counter()
 
-#             # HR
-#             'Onboarding or Hiring Staff': 'HR / Staffing',
+# for entry in df['Support']:
+#     items = [i.strip().lower() for i in entry.split(",")]
+#     for item in items:
+#         if item in normalized_categories:
+#             counter[normalized_categories[item]] += 1 # Count occurrences
 
-#             # Organization Strategy / Ops
-#             'Organization': 'Organizational Strategy',
-#             'Organization Strategy': 'Organizational Strategy',
-#             'Organizational Strategy': 'Organizational Strategy',
-#             'Organizational Activity': 'Organizational Activity',
-#             'Organizational Activity - Board Support': 'Organizational Activity',
-#             'Organizational Collaboration': 'Organizational Activity',
-#             'Organizational Efficiency': 'Organizational Activity',
+# # Display the result
+# # for category, count in counter.items():
+# #     print(f"Support Counts: \n {category}: {count}")
 
-#             # Website / Tech
-#             'Research Website plugins': 'Web & Tech',
-#             'Website Troubleshooting': 'Web & Tech',
-#             'Working with IT to get content up': 'Web & Tech',
-#             'Uploading PDFs to Drive': 'Web & Tech',
+# df_ = pd.DataFrame(counter.items(), columns=['', 'Count']).sort_values(by='Count', ascending=False)
 
-#             # Scheduling
-#             'Schedule Measle Post': 'Scheduling',
-#             'Scheduled Military Affiliated Job Post': 'Scheduling',
+# Identify unexpected/unapproved categories
+outreach_unexpected = df[~df['Outreach Activity'].isin(outreach_activity_categories)]
+# print("Outreach Activity Unexpected: \n", outreach_unexpected['Outreach Activity'].unique().tolist())
 
-#             # Admin
-#             'Sustainability Binder': 'Admin/Documentation',
-#             'Timesheet': 'Admin/Documentation',
+# print("Outreach Activity Unique After:", df["Outreach Activity"].unique().tolist())
 
-#             # Newsletter
-#             'Update Newsletter': 'Newsletter',
-#             'Updated Marcom Presentation': 'Newsletter',
+# Product Type dataframe:
+outreach_activity = df.groupby('Outreach Activity').size().reset_index(name='Count')
 
-#             # Training
-#             'Training': 'Training',
+outreach_bar = px.bar(
+    outreach_activity,
+    x='Outreach Activity',
+    y='Count',
+    color='Outreach Activity',
+    text='Count',
+).update_layout(
+    height=990, 
+    width=1700,
+    title=dict(
+        text=f'{current_month} Outreach Activities',
+        x=0.5, 
+        font=dict(
+            size=25,
+            family='Calibri',
+            color='black',
+        )
+    ),
+    font=dict(
+        family='Calibri',
+        size=18,
+        color='black'
+    ),
+    xaxis=dict(
+        tickangle=-15,
+        tickfont=dict(size=18),  
+        title=dict(
+            text="Product",
+            font=dict(size=20), 
+        ),
+        showticklabels=False
+    ),
+    yaxis=dict(
+        title=dict(
+            text='Count',
+            font=dict(size=20), 
+        ),
+    ),
+    legend=dict(
+        title_text='',
+        orientation="v",
+        x=1.05,
+        y=1,
+        xanchor="left",
+        yanchor="top",
+        visible=True
+    ),
+    hovermode='closest',
+    bargap=0.08,
+    bargroupgap=0,
+    margin=dict(t=50, r=50, b=30, l=40),
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+)
 
-#             # Misc
-#             'sent logo to Director of Outreach': 'Branding',
-#         }
-#     )
-# )
+# Person Pie Chart
+outreach_pie = px.pie(
+    outreach_activity,
+    names="Outreach Activity",
+    values='Count'
+).update_layout(
+    height=950,
+    width=1700,
+    title=f'{current_month} Ratio of Outreach Activities',
+    title_x=0.5,
+    font=dict(
+        family='Calibri',
+        size=17,
+        color='black'
+    )
+).update_traces(
+    rotation=90,
+    textposition='auto',
+    textinfo='value+percent',
+    hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
+)
 
+# ============================ Education Activity ================================ #
 
-# df_purpose = df.groupby('Purpose').size().reset_index(name='Count')
+# print("Education Activity Unique Before: \n", df["Education Activity"].unique().tolist())
 
-# # Purpose Bar Chart
-# purpose_bar = px.bar(
-#     df_purpose,
-#     x='Purpose',
-#     y='Count',
-#     color='Purpose',
-#     text='Count',
-# ).update_layout(
-#     height=990,
-#     width=1700,
-#     title=dict(
-#         text='Purpose',
-#         x=0.5,
-#         font=dict(
-#             size=25,
-#             family='Calibri',
-#             color='black',
-#         )
-#     ),
-#     font=dict(
-#         family='Calibri',
-#         size=18,
-#         color='black'
-#     ),
-#     xaxis=dict(
-#         tickangle=-15,
-#         tickfont=dict(size=18),
-#         title=dict(
-#             text="Purpose",
-#             font=dict(size=20),
-#         ),
-#         showticklabels=False
-#     ),
-#     yaxis=dict(
-#         title=dict(
-#             text='Count',
-#             font=dict(size=20),
-#         ),
-#     ),
-#     legend=dict(
-#         title_text='',
-#         orientation="v",
-#         x=1.05,
-#         y=1,
-#         xanchor="left",
-#         yanchor="top",
-#         visible=True
-#     ),
-#     hovermode='closest',
-#     bargap=0.08,
-#     bargroupgap=0,
-# ).update_traces(
-#     textposition='auto',
-#     hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
-# )
+education_activity_unique = [
+'', 'Visual', 'Meeting', 'Vector Logo', 'Timesheet', 'Overcoming Mental Hellness logo', 'None', 'DACC Meeting', 'Newsletter', 'MarCom Check-in Meeting.', 'Updated Newsletter', 'Social Media Post, schedule SWAD post', 'Newsletter/ Social Media Analytics', 'Social Media Post, Shared partner post with Areebah', 'meeting with Areebah', 'Social Media Post, schedule CUC post on social media', 'Social Media Post', 'Quarterly Team Meeting', 'Visual, updated food sustainable flyer , created Mr. Larry Wallace Sr. Congratulations flyer , Stress Awareness flyer', 'Manor Project Meeting', 'updated Overcoming Mental Hellness Logo', 'Event', 'Event, Announcements', 'Newsletter, Newsletter - Layout', 'AmeriCorps Duties', 'Newsletter, Visual', 'Event, Newsletter', 'Videography', 'PSA / Commercial, Videography', 'Social Media Post, Visual', 'Updated the March Impact Report', 'updated Q2 Report', 'Social Media Post, update Social Media Coverage page visual', 'Visual, update board slide', 'Visual, Updated the March Impact Report', 'Visual, updated Q2 Report', 'Visual, Updated Bartley’s Way Documents', 'Created the Q2 Board Member Meeting slides', 'updated Military slides', 'Meeting with Areebah', 'meeting with Carlos Bautista', 'Updated Q2 Report', 'Key Leader Meeting', 'Visual, updated and sent DACC flyer for approval', 'Social Media Post, reviewed partner posts of social media', 'Key Leader huddle'
+]
 
-# # Purpose Pie Chart
-# purpose_pie = px.pie(
-#     df_purpose,
-#     names="Purpose",
-#     values='Count'
-# ).update_layout(
-#     height=950,
-#     width=1700,
-#     title='Purpose Percentages',
-#     title_x=0.5,
-#     font=dict(
-#         family='Calibri',
-#         size=17,
-#         color='black'
-#     )
-# ).update_traces(
-#     rotation=160,
-#     textposition='auto',
-#     textinfo='value+percent',
-#     hovertemplate='<b>%{label} Status</b>: %{value}<extra></extra>',
-# )
+education_activity_categories = [
+    "Event",
+    "Handout",
+    "Newsletter",
+    "PSA / Commercial",
+    "Social Media Post",
+    "Videography",
+    "Visual"
+]
+
+df['Education Activity'] = (
+    df['Education Activity']
+    .str.strip()
+    .replace({
+        "" : "",
+    })
+)
+
+# normalized_categories = {cat.lower().strip(): cat for cat in _categories}
+# counter = Counter()
+
+# for entry in df['']:
+#     items = [i.strip().lower() for i in entry.split(",")]
+#     for item in items:
+#         if item in normalized_categories:
+#             counter[normalized_categories[item]] += 1
+
+# # for category, count in counter.items():
+# #     print(f"Support Counts: \n {category}: {count}")
+
+# df_ = pd.DataFrame(counter.items(), columns=['', 'Count']).sort_values(by='Count', ascending=False)
+
+# Identify unexpected/unapproved categories
+education_unexpected = df[~df['Education Activity'].isin(education_activity_categories)]
+# print("Education Activity Unexpected: \n", education_unexpected['Education Activity'].unique().tolist())
+
+# print("Education Activity Unique After:", df["Education Activity"].unique().tolist())
+
+# Product Type dataframe:
+education_activity = df.groupby('Education Activity').size().reset_index(name='Count')
+
+education_bar = px.bar(
+    education_activity,
+    x='Education Activity',
+    y='Count',
+    color='Education Activity',
+    text='Count',
+).update_layout(
+    height=990, 
+    width=1700,
+    title=dict(
+        text=f'{current_month} Education Activities',
+        x=0.5, 
+        font=dict(
+            size=25,
+            family='Calibri',
+            color='black',
+        )
+    ),
+    font=dict(
+        family='Calibri',
+        size=18,
+        color='black'
+    ),
+    xaxis=dict(
+        tickangle=-15,
+        tickfont=dict(size=18),  
+        title=dict(
+            text="Product",
+            font=dict(size=20), 
+        ),
+        showticklabels=False
+    ),
+    yaxis=dict(
+        title=dict(
+            text='Count',
+            font=dict(size=20), 
+        ),
+    ),
+    legend=dict(
+        title_text='',
+        orientation="v",
+        x=1.05,
+        y=1,
+        xanchor="left",
+        yanchor="top",
+        visible=True
+    ),
+    hovermode='closest',
+    bargap=0.08,
+    bargroupgap=0,
+    margin=dict(t=50, r=50, b=30, l=40),
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+)
+
+# Person Pie Chart
+education_pie = px.pie(
+    education_activity,
+    names="Education Activity",
+    values='Count'
+).update_layout(
+    height=950,
+    width=1700,
+    title=f'{current_month} Ratio of Education Activities',
+    title_x=0.5,
+    font=dict(
+        family='Calibri',
+        size=17,
+        color='black'
+    )
+).update_traces(
+    rotation=90,
+    textposition='auto',
+    textinfo='value+percent',
+    hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
+)
+
+# ============================ Entity Name ================================ #
+
+# print("Entity Names Unique Before: \n", df["Entity"].unique().tolist())
+
+entity_unique = [
+'', 'CommunityCare', 'None', "Black Men's Health Clinic", 'DACC Meeting', "Black Men's Health Clinic, Overcoming Mental Hellness logo", "Austin Public Health, Black Men's Health Clinic, Sustainable Food Center", 'AmeriCorps Duties', 'Austin Public Health, Sustainable Food Center', 'Austin Public Health, SFC', 'SFC'
+]
+
+entity_categories = [
+    "Austin Public Health",
+    "Black Men's Health Clinic",
+    "Central Health",
+    "CommunityCare",
+    "GudLife",
+    "Integral Care"
+]
+
+df['Entity'] = (
+    df['Entity']
+    .str.strip()
+    .replace({
+        "" : "",
+    })
+)
+
+# normalized_categories = {cat.lower().strip(): cat for cat in _categories}
+# counter = Counter()
+
+# for entry in df['Support']:
+#     items = [i.strip().lower() for i in entry.split(",")]
+#     for item in items:
+#         if item in normalized_categories:
+#             counter[normalized_categories[item]] += 1
+
+# # for category, count in counter.items():
+# #     print(f"Support Counts: \n {category}: {count}")
+
+# df_ = pd.DataFrame(counter.items(), columns=['', 'Count']).sort_values(by='Count', ascending=False)
+
+# Identify unexpected/unapproved categories
+entity_unexpected = df[~df['Entity'].isin(entity_categories)]
+# print("Entity Unexpected: \n", entity_unexpected['Entity'].unique().tolist())
+
+# print("Entity Unique After:", df["Entity"].unique().tolist())
+
+# Product Type dataframe:
+entity_activity = df.groupby('Entity').size().reset_index(name='Count')
+
+entity_bar = px.bar(
+    entity_activity,
+    x='Entity',
+    y='Count',
+    color='Entity',
+    text='Count',
+).update_layout(
+    height=990, 
+    width=1700,
+    title=dict(
+        text=f'{current_month} Entity Activities',
+        x=0.5, 
+        font=dict(
+            size=25,
+            family='Calibri',
+            color='black',
+        )
+    ),
+    font=dict(
+        family='Calibri',
+        size=18,
+        color='black'
+    ),
+    xaxis=dict(
+        tickangle=-15,
+        tickfont=dict(size=18),  
+        title=dict(
+            text="Product",
+            font=dict(size=20), 
+        ),
+        showticklabels=False
+    ),
+    yaxis=dict(
+        title=dict(
+            text='Count',
+            font=dict(size=20), 
+        ),
+    ),
+    legend=dict(
+        title_text='',
+        orientation="v",
+        x=1.05,
+        y=1,
+        xanchor="left",
+        yanchor="top",
+        visible=True
+    ),
+    hovermode='closest',
+    bargap=0.08,
+    bargroupgap=0,
+    margin=dict(t=50, r=50, b=30, l=40),
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+)
+
+# Entity Pie Chart
+entity_pie = px.pie(
+    entity_activity,
+    names="Entity",
+    values='Count'
+).update_layout(
+    height=950,
+    width=1700,
+    title=f'{current_month} Ratio of Entity Activities',
+    title_x=0.5,
+    font=dict(
+        family='Calibri',
+        size=17,
+        color='black'
+    )
+).update_traces(
+    rotation=90,
+    textposition='auto',
+    textinfo='value+percent',
+    hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
+)
 
 # # ========================== DataFrame Table ========================== #
 
@@ -920,77 +1106,6 @@ marcom_table = go.Figure(data=[go.Table(
         font=dict(size=12)  # Adjust font size
     )
 )])
-
-# marcom_table.update_layout(
-#     margin=dict(l=50, r=50, t=30, b=40),  # Remove margins
-#     height=400,
-#     # width=1500,  # Set a smaller width to make columns thinner
-#     paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
-#     plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot area
-# )
-
-# # Products Table
-# products_table = go.Figure(data=[go.Table(
-#     # columnwidth=[50, 50, 50],  # Adjust the width of the columns
-#     header=dict(
-#         values=list(df_product_type.columns),
-#         fill_color='paleturquoise',
-#         align='center',
-#         height=30,  # Adjust the height of the header cells
-#         # line=dict(color='black', width=1),  # Add border to header cells
-#         font=dict(size=12)  # Adjust font size
-#     ),
-#     cells=dict(
-#         values=[df_product_type[col] for col in df_product_type.columns],
-#         fill_color='lavender',
-#         align='left',
-#         height=25,  # Adjust the height of the cells
-#         # line=dict(color='black', width=1),  # Add border to cells
-#         font=dict(size=12)  # Adjust font size
-#     )
-# )])
-
-# products_table.update_layout(
-#     margin=dict(l=50, r=50, t=30, b=40),  # Remove margins
-#     height=850,
-#     width=700,
-#     # width=1500,  # Set a smaller width to make columns thinner
-#     paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
-#     plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot area
-# )
-
-# Purpose dataframe:
-# df_purpose = df.groupby('Purpose').size().reset_index(name='Count')
-
-# Purpose Table
-# purpose_table = go.Figure(data=[go.Table(
-#     # columnwidth=[50, 50, 50],  # Adjust the width of the columns
-#     header=dict(
-#         values=list(df_purpose.columns),
-#         fill_color='paleturquoise',
-#         align='center',
-#         height=30,  # Adjust the height of the header cells
-#         # line=dict(color='black', width=1),  # Add border to header cells
-#         font=dict(size=12)  # Adjust font size
-#     ),
-#     cells=dict(
-#         values=[df_purpose[col] for col in df_purpose.columns],
-#         fill_color='lavender',
-#         align='left',
-#         height=25,  # Adjust the height of the cells
-#         # line=dict(color='black', width=1),  # Add border to cells
-#         font=dict(size=12)  # Adjust font size
-#     )
-# )])
-
-# purpose_table.update_layout(
-#     margin=dict(l=50, r=50, t=30, b=40),  # Remove margins
-#     height=850,
-#     width=700,
-#     # width=1500,  # Set a smaller width to make columns thinner
-#     paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
-#     plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot area
-# )
 
 # ============================== Dash Application ========================== #
 
@@ -1052,7 +1167,7 @@ html.Div(
             children=[
             html.Div(
                 className='high1',
-                children=[f'{current_month} MarCom Events:']
+                children=[f'{current_month} MarCom Events']
             ),
             html.Div(
                 className='circle',
@@ -1076,7 +1191,7 @@ html.Div(
             children=[
             html.Div(
                 className='high3',
-                children=[f'{current_month} MarCom Hours:']
+                children=[f'{current_month} MarCom Hours']
             ),
             html.Div(
                 className='circle2',
@@ -1106,7 +1221,7 @@ html.Div(
             children=[
             html.Div(
                 className='high1',
-                children=[f'{current_month} Travel Hours:']
+                children=[f'{current_month} MC Travel Hours']
             ),
             html.Div(
                 className='circle',
@@ -1151,29 +1266,6 @@ html.Div(
     ]
 ),
 
-# ROW 3
-html.Div(
-    className='row2',
-    children=[
-        html.Div(
-            className='graph1',
-            children=[                
-                dcc.Graph(
-                    figure=activity_bar
-                )
-            ]
-        ),
-        html.Div(
-            className='graph2',
-            children=[
-                dcc.Graph(
-                    figure=activity_pie
-                )
-            ],
-        ),
-    ]
-),
-
 html.Div(
     className='row3',
     children=[
@@ -1181,7 +1273,7 @@ html.Div(
             className='graph33',
             children=[
                 dcc.Graph(
-                    # figure=product_bar
+                    figure=bmhc_bar
                 )
             ]
         ),
@@ -1195,7 +1287,20 @@ html.Div(
             className='graph33',
             children=[
                 dcc.Graph(
-                    # figure=product_pie
+                    figure=bmhc_pie
+                )
+            ]
+        ),
+    ]
+),   
+html.Div(
+    className='row3',
+    children=[
+        html.Div(
+            className='graph33',
+            children=[
+                dcc.Graph(
+                    figure=care_bar
                 )
             ]
         ),
@@ -1209,7 +1314,7 @@ html.Div(
             className='graph33',
             children=[
                 dcc.Graph(
-                    # figure=purpose_bar
+                    figure=care_pie
                 )
             ]
         ),
@@ -1223,66 +1328,82 @@ html.Div(
             className='graph33',
             children=[
                 dcc.Graph(
-                    # figure=purpose_pie
+                    figure=outreach_bar
                 )
             ]
         ),
     ]
 ),   
 
-# # ROW 2
-# html.Div(
-#     className='row2',
-#     children=[
-#         html.Div(
-#             className='graph3',
-#             children=[
-#                 html.Div(
-#                     className='table',
-#                     children=[
-#                         html.H1(
-#                             className='table-title',
-#                             children='Products Table'
-#                         )
-#                     ]
-#                 ),
-#                 html.Div(
-#                     className='table2', 
-#                     children=[
-#                         dcc.Graph(
-#                             className='data',
-#                             figure=products_table
-#                         )
-#                     ]
-#                 )
-#             ]
-#         ),
-#         html.Div(
-#             className='graph4',
-#             children=[                
-#               html.Div(
-#                     className='table',
-#                     children=[
-#                         html.H1(
-#                             className='table-title',
-#                             children='Purpose Table'
-#                         )
-#                     ]
-#                 ),
-#                 html.Div(
-#                     className='table2', 
-#                     children=[
-#                         dcc.Graph(
-#                             className='data',
-#                             figure=purpose_table
-#                         )
-#                     ]
-#                 )
-   
-#             ]
-#         )
-#     ]
-# ),
+html.Div(
+    className='row3',
+    children=[
+        html.Div(
+            className='graph33',
+            children=[
+                dcc.Graph(
+                    figure=outreach_pie
+                )
+            ]
+        ),
+    ]
+),   
+
+html.Div(
+    className='row3',
+    children=[
+        html.Div(
+            className='graph33',
+            children=[
+                dcc.Graph(
+                    figure=education_bar
+                )
+            ]
+        ),
+    ]
+),   
+
+html.Div(
+    className='row3',
+    children=[
+        html.Div(
+            className='graph33',
+            children=[
+                dcc.Graph(
+                    figure=education_pie
+                )
+            ]
+        ),
+    ]
+),   
+
+html.Div(
+    className='row3',
+    children=[
+        html.Div(
+            className='graph33',
+            children=[
+                dcc.Graph(
+                    figure=entity_bar
+                )
+            ]
+        ),
+    ]
+),   
+
+html.Div(
+    className='row3',
+    children=[
+        html.Div(
+            className='graph33',
+            children=[
+                dcc.Graph(
+                    figure=entity_pie
+                )
+            ]
+        ),
+    ]
+),   
 
 # ROW 4
 html.Div(
