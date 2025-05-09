@@ -706,11 +706,11 @@ care_pie = px.pie(
 
 # print("Outreach Activity Unique Before: \n", df["Outreach Activity"].unique().tolist())
 
-outreach_activity_unique = [
+outreach_unique = [
 '', 'Created special HTML BMHC Announcement of the CommUnity Care Clinic Measles Clinic in MailChimp', 'Updated email distribution list for special HTML BMHC Announcement of the CommUnity Care Clinic Measles Clinic', 'Health awareness, equity, tips, and services info for the public', 'No Product - Organizational Human Resources Support', 'Event (in-person), Social Media Post, Visuals', 'None', 'Visuals', 'Vector Logo', 'Timesheet', 'Overcoming Mental Hellness logo', 'PSA/ Commercial', 'Blogs', 'DACC Meeting', 'Newsletter plan', 'Social Media Post, schedule SWAD post', 'Newsletter/ Social Media Analytics', 'BMHC Services', 'Social Media Post, Shared partner post with Areebah', 'meeting with Areebah', 'Social Media Post, schedule CUC post on social media', 'Social Media Post', 'Quarterly Team Meeting', 'Updated Newsletter', 'Visuals, updated food sustainable flyer , created Mr. Larry Wallace Sr. Congratulations flyer , Stress Awareness flyer', 'updated Overcoming Mental Hellness Logo', 'Website Updates', 'Special Event planning', 'Event (in-person)', 'Website', 'Event Logistics', 'Key Event Logistics', 'Videography', 'Event (in-person), Special events set up', 'purchase food for special events', 'Social Media Post, Visuals', 'Updated the March Impact Report', 'updated Q2 Report', 'Social Media Post, update Social Media Coverage page visual', 'Visuals, update board slide', 'Visuals, Updated the March Impact Report', 'Visuals, Updated Bartley’s Way Documents', 'Created the Q2 Board Member Meeting slides', 'updated Military slides', 'Meeting with Areebah', 'meeting with Carlos Bautista', 'Updated Q2 Report', 'Key Leader Meeting', 'Created and sent Newsletter Plan or 4/25', 'Visuals, updated and sent DACC flyer for approval', 'updated newsletter', 'Social Media Post, reviewed partner posts of social media', 'Key Leader huddle'
 ]
 
-outreach_activity_categories = [
+outreach_categories = [
     "Event (in-person)",
     "Handouts",
     "Press Releases",
@@ -725,28 +725,104 @@ df['Outreach Activity'] = (
     df['Outreach Activity']
     .str.strip()
     .replace({
-        "" : "",
+    'Created special HTML BMHC Announcement of the CommUnity Care Clinic Measles Clinic in MailChimp': 'Press Releases',
+    'Updated email distribution list for special HTML BMHC Announcement of the CommUnity Care Clinic Measles Clinic': 'Press Releases',
+    'Health awareness, equity, tips, and services info for the public': 'Social Media Post',
+    'No Product - Organizational Human Resources Support': '',
+    'Event (in-person), Social Media Post, Visuals': 'Event (in-person)',
+    'None': '',
+    'Visuals': 'Visuals',
+    'Vector Logo': 'Visuals',
+    'Timesheet': '',
+    'Overcoming Mental Hellness logo': 'Visuals',
+    'PSA/ Commercial': 'PSA/ Commercial',
+    'Blogs': 'Press Releases',
+    'DACC Meeting': 'Event (in-person)',
+    'Newsletter plan': 'Press Releases',
+    'Social Media Post, schedule SWAD post': 'Social Media Post',
+    'Newsletter/ Social Media Analytics': 'Social Media Post',
+    'BMHC Services': 'Handouts',
+    'Social Media Post, Shared partner post with Areebah': 'Social Media Post',
+    'meeting with Areebah': 'Event (in-person)',
+    'Social Media Post, schedule CUC post on social media': 'Social Media Post',
+    'Social Media Post': 'Social Media Post',
+    'Quarterly Team Meeting': 'Event (in-person)',
+    'Updated Newsletter': 'Press Releases',
+    'Visuals, updated food sustainable flyer , created Mr. Larry Wallace Sr. Congratulations flyer , Stress Awareness flyer': 'Visuals',
+    'updated Overcoming Mental Hellness Logo': 'Visuals',
+    'Website Updates': 'Website',
+    'Special Event planning': 'Event (in-person)',
+    'Event (in-person)': 'Event (in-person)',
+    'Website': 'Website',
+    'Event Logistics': 'Event (in-person)',
+    'Key Event Logistics': 'Event (in-person)',
+    'Videography': 'Videography',
+    'Event (in-person), Special events set up': 'Event (in-person)',
+    'purchase food for special events': 'Event (in-person)',
+    'Social Media Post, Visuals': 'Social Media Post',
+    'Updated the March Impact Report': 'Press Releases',
+    'updated Q2 Report': 'Press Releases',
+    'Social Media Post, update Social Media Coverage page visual': 'Social Media Post',
+    'Visuals, update board slide': 'Visuals',
+    'Visuals, Updated the March Impact Report': 'Visuals',
+    'Visuals, Updated Bartley’s Way Documents': 'Visuals',
+    'Created the Q2 Board Member Meeting slides': 'Visuals',
+    'updated Military slides': 'Visuals',
+    'Meeting with Areebah': 'Event (in-person)',
+    'meeting with Carlos Bautista': 'Event (in-person)',
+    'Updated Q2 Report': 'Press Releases',
+    'Key Leader Meeting': 'Event (in-person)',
+    'Created and sent Newsletter Plan or 4/25': 'Press Releases',
+    'Visuals, updated and sent DACC flyer for approval': 'Visuals',
+    'updated newsletter': 'Press Releases',
+    'Social Media Post, reviewed partner posts of social media': 'Social Media Post',
+    'Key Leader huddle': 'Event (in-person)',
     })
 )
 
-# normalized_categories = {cat.lower().strip(): cat for cat in _categories}
-# counter = Counter()
+# Define the function to map the entries to categories
+def map_to_category(entry):
+    entry = entry.lower()  # Normalize to lowercase to make matching case-insensitive
+    if 'event' in entry and 'in-person' in entry:
+        return "Event (in-person)"
+    elif 'handout' in entry:
+        return "Handouts"
+    elif 'press release' in entry or 'psa' in entry:
+        return "Press Releases"
+    elif 'psa' in entry or 'commercial' in entry:
+        return "PSA/ Commercial"
+    elif 'social media' in entry:
+        return "Social Media Post"
+    elif 'videography' in entry:
+        return "Videography"
+    elif 'visual' in entry:
+        return "Visuals"
+    elif 'website' in entry:
+        return "Website"
+    else:
+        return "None"  # In case there is no match
 
-# for entry in df['Support']:
-#     items = [i.strip().lower() for i in entry.split(",")]
-#     for item in items:
-#         if item in normalized_categories:
-#             counter[normalized_categories[item]] += 1 # Count occurrences
-
-# # Display the result
-# # for category, count in counter.items():
-# #     print(f"Support Counts: \n {category}: {count}")
-
-# df_ = pd.DataFrame(counter.items(), columns=['', 'Count']).sort_values(by='Count', ascending=False)
+# Apply the mapping function to the entries in 'outreach_unique'
+renamed_outreach = [map_to_category(entry) for entry in outreach_unique]
 
 # Identify unexpected/unapproved categories
-outreach_unexpected = df[~df['Outreach Activity'].isin(outreach_activity_categories)]
+outreach_unexpected = df[~df['Outreach Activity'].isin(outreach_categories)]
 # print("Outreach Activity Unexpected: \n", outreach_unexpected['Outreach Activity'].unique().tolist())
+
+normalized_categories = {cat.lower().strip(): cat for cat in outreach_categories}
+counter = Counter()
+
+for entry in df['Outreach Activity']:
+    items = [i.strip().lower() for i in entry.split(",")]
+    for item in items:
+        if item in normalized_categories:
+            counter[normalized_categories[item]] += 1 # Count occurrences
+
+# Display the result
+# for category, count in counter.items():
+#     print(f"Support Counts: \n {category}: {count}")
+
+df_outreach = pd.DataFrame(counter.items(), columns=['Outreach Activity', 'Count']).sort_values(by='Count', ascending=False)
 
 # print("Outreach Activity Unique After:", df["Outreach Activity"].unique().tolist())
 
@@ -754,7 +830,7 @@ outreach_unexpected = df[~df['Outreach Activity'].isin(outreach_activity_categor
 outreach_activity = df.groupby('Outreach Activity').size().reset_index(name='Count')
 
 outreach_bar = px.bar(
-    outreach_activity,
+    df_outreach,
     x='Outreach Activity',
     y='Count',
     color='Outreach Activity',
@@ -811,7 +887,7 @@ outreach_bar = px.bar(
 
 # Person Pie Chart
 outreach_pie = px.pie(
-    outreach_activity,
+    df_outreach,
     names="Outreach Activity",
     values='Count'
 ).update_layout(
