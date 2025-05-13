@@ -347,6 +347,7 @@ person_bar=px.bar(
         visible=False
         # visible=True
     ),
+    margin=dict(t=60, r=0, b=30, l=150),
     hovermode='closest', # Display only one hover label per trace
     bargap=0.08,  # Reduce the space between bars
     bargroupgap=0,  # Reduce space between individual bars in groups
@@ -479,6 +480,23 @@ df['BMHC Activity'] = (
     .str.strip()
     .replace({
         "" : "",
+        'Add/ Review Content': 'Communication & Correspondence',
+        'Website Troubleshooting': 'Office Management',
+        'Organization': 'Office Management',
+        'Organizational Efficiency': 'Office Management',
+        'Impact Metrics': 'Research & Planning',
+        'Care Network Related Strategy': 'Research & Planning',
+        'Communications Support': 'Communication & Correspondence',
+        'Communication & Correspondence': 'Communication & Correspondence',
+        'Research & Planning': 'Research & Planning',
+        'Organization Strategy': 'Research & Planning',
+        'Record Keeping & Documentation': 'Record Keeping & Documentation',
+        'Key or Special Event Support': 'Office Management',
+        'BMHC Co-Branding': 'Communication & Correspondence',
+        'Marketing Promotion': 'Communication & Correspondence',
+        'Update Newsletter': 'Communication & Correspondence',
+        'Compliance & Policy Enforcement': 'Compliance & Policy Enforcement',
+        'Office Management': 'Office Management'
     })
 )
 
@@ -589,7 +607,8 @@ care_activity_categories = [
     "Government",
     "Religious",
     "SDoH Provider",
-    "Workforce Development"
+    "Workforce Development",
+    "No Product",
 ]
 
 df['Care Activity'] = (
@@ -597,6 +616,51 @@ df['Care Activity'] = (
     .str.strip()
     .replace({
         "" : "",
+        'Website Updates': 'Academic',
+        'Meeting': 'Academic',
+        'Internal Communications': 'Academic',
+        'No Product - Organizational Efficiency': 'No Product',
+        'No product - organizational strategy': 'No Product',
+        'Community Collaboration': 'Give Back Program',
+        'Organizational Support': 'No Product',
+        'No Product - Organizational Support': 'No Product',
+        'Human Resources Training for Efficiency': 'Workforce Development',
+        'Clinical Provider': 'Clinical Provider',
+        'Workforce Development': 'Workforce Development',
+        'Special Announcement': 'Academic',
+        'AmeriCorps Responsibility': 'Workforce Development',
+        'no product': 'No Product',
+        'MarCom Report': 'Academic',
+        'Distribution list': 'Academic',
+        'Announcement': 'Academic',
+        'Government': 'Government',
+        'Internal Communications, No Product - Organizational Efficiency': 'No Product',
+        'No Product - Organizational Efficiency,': 'No Product',
+        'Timesheet': 'No Product',
+        'Event Support-Catering': 'Give Back Program',
+        'Event Support': 'Give Back Program',
+        'Marcom Report': 'Academic',
+        'No product- Organizational Efficiency': 'No Product',
+        'no product- organization efficiency': 'No Product',
+        'Newsletter': 'Academic',
+        'Flyer': 'Academic',
+        'Internal Communications, Meeting': 'Academic',
+        'Organizational Efficiency': 'No Product',
+        'Co-Branding, Community Collaboration, Planning - BMHC - Austin Public Health - Sustainable Foods Prostate Cancer Class: Thursday, April 24th at Metropolitan A.M.E.': 'Give Back Program',
+        'Mental Hellness - The Bartley Method - video editing': 'Academic',
+        'no product - organizational efficiency': 'No Product',
+        'no product - Organizational Efficiency': 'No Product',
+        'Co-Branding, Flyer': 'Academic',
+        'Archive list': 'Academic',
+        'No product': 'No Product',
+        'MarCom Impact Report': 'Academic',
+        'Writing, Editing, Proofing': 'Academic',
+        'Social Media Post': 'Academic',
+        'Flyer, Registration for prostate cancer class': 'Academic',
+        'Promotion': 'Academic',
+        'Organized press release pdfs': 'Academic',
+        'Academic': 'Academic',
+        'SDoH Provider': 'SDoH Provider',
     })
 )
 
@@ -904,7 +968,7 @@ outreach_pie = px.pie(
         color='black'
     )
 ).update_traces(
-    rotation=90,
+    rotation=0,
     textposition='auto',
     textinfo='value+percent',
     hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
@@ -932,7 +996,64 @@ df['Education Activity'] = (
     df['Education Activity']
     .str.strip()
     .replace({
-        "" : "",
+        "" : "N/A",
+        "None": "Event",
+
+        # Event-related
+        "Meeting": "Event",
+        "DACC Meeting": "Event",
+        "MarCom Check-in Meeting.": "Event",
+        "meeting with Areebah": "Event",
+        "Quarterly Team Meeting": "Event",
+        "Manor Project Meeting": "Event",
+        "Event": "Event",
+        "Event, Announcements": "Event",
+        "AmeriCorps Duties": "Event",
+        "Meeting with Areebah": "Event",
+        "meeting with Carlos Bautista": "Event",
+        "Key Leader Meeting": "Event",
+        "Key Leader huddle": "Event",
+        "Timesheet": "Event",
+
+        # Newsletter
+        "Newsletter": "Newsletter",
+        "Updated Newsletter": "Newsletter",
+        "Newsletter/ Social Media Analytics": "Newsletter",
+        "Newsletter, Newsletter - Layout": "Newsletter",
+        "Newsletter, Visual": "Newsletter",
+        "Event, Newsletter": "Newsletter",
+        "Updated the March Impact Report": "Newsletter",
+        "updated Q2 Report": "Newsletter",
+        "Updated Q2 Report": "Newsletter",
+
+        # Social Media Post
+        "Social Media Post": "Social Media Post",
+        "Social Media Post, schedule SWAD post": "Social Media Post",
+        "Social Media Post, Shared partner post with Areebah": "Social Media Post",
+        "Social Media Post, schedule CUC post on social media": "Social Media Post",
+        "Social Media Post, update Social Media Coverage page visual": "Social Media Post",
+        "Social Media Post, reviewed partner posts of social media": "Social Media Post",
+        "Social Media Post, Visual": "Social Media Post",
+
+        # Visual
+        "Visual": "Visual",
+        "Vector Logo": "Visual",
+        "Overcoming Mental Hellness logo": "Visual",
+        "Visual, updated food sustainable flyer , created Mr. Larry Wallace Sr. Congratulations flyer , Stress Awareness flyer": "Visual",
+        "updated Overcoming Mental Hellness Logo": "Visual",
+        "Visual, update board slide": "Visual",
+        "Visual, Updated the March Impact Report": "Visual",
+        "Visual, updated Q2 Report": "Visual",
+        "Visual, Updated Bartley’s Way Documents": "Visual",
+        "Created the Q2 Board Member Meeting slides": "Visual",
+        "updated Military slides": "Visual",
+        "Visual, updated and sent DACC flyer for approval": "Visual",
+
+        # Videography
+        "Videography": "Videography",
+
+        # PSA / Commercial
+        "PSA / Commercial, Videography": "PSA / Commercial"
     })
 )
 
@@ -1031,7 +1152,7 @@ education_pie = px.pie(
         color='black'
     )
 ).update_traces(
-    rotation=90,
+    rotation=25,
     textposition='auto',
     textinfo='value+percent',
     hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
@@ -1048,33 +1169,24 @@ entity_unique = [
 entity_categories = [
     "Austin Public Health",
     "Black Men's Health Clinic",
+    "City of Austin AmeriCorps",
+    "Sustainable Food Center",
     "Central Health",
     "CommunityCare",
     "GudLife",
-    "Integral Care"
+    "Integral Care",
+    "DACC Meeting",
+    "None",
 ]
 
 df['Entity'] = (
     df['Entity']
     .str.strip()
     .replace({
-        "" : "",
+        "AmeriCorps Duties" : "City of Austin AmeriCorps",
+        "SFC" : "Sustainable Food Center",
     })
 )
-
-# normalized_categories = {cat.lower().strip(): cat for cat in _categories}
-# counter = Counter()
-
-# for entry in df['Support']:
-#     items = [i.strip().lower() for i in entry.split(",")]
-#     for item in items:
-#         if item in normalized_categories:
-#             counter[normalized_categories[item]] += 1
-
-# # for category, count in counter.items():
-# #     print(f"Support Counts: \n {category}: {count}")
-
-# df_ = pd.DataFrame(counter.items(), columns=['', 'Count']).sort_values(by='Count', ascending=False)
 
 # Identify unexpected/unapproved categories
 entity_unexpected = df[~df['Entity'].isin(entity_categories)]
@@ -1082,11 +1194,24 @@ entity_unexpected = df[~df['Entity'].isin(entity_categories)]
 
 # print("Entity Unique After:", df["Entity"].unique().tolist())
 
-# Product Type dataframe:
-entity_activity = df.groupby('Entity').size().reset_index(name='Count')
+normalized_categories = {cat.lower().strip(): cat for cat in entity_categories}
+counter = Counter()
+
+for entry in df['Entity']:
+    items = [i.strip().lower() for i in entry.split(",")]
+    for item in items:
+        if item in normalized_categories:
+            counter[normalized_categories[item]] += 1
+
+# for category, count in counter.items():
+#     print(f"Support Counts: \n {category}: {count}")
+
+df_entity = pd.DataFrame(counter.items(), columns=['Entity', 'Count']).sort_values(by='Count', ascending=False)
+
+# df_entity = df.groupby('Entity').size().reset_index(name='Count')
 
 entity_bar = px.bar(
-    entity_activity,
+    df_entity,
     x='Entity',
     y='Count',
     color='Entity',
@@ -1143,7 +1268,7 @@ entity_bar = px.bar(
 
 # Entity Pie Chart
 entity_pie = px.pie(
-    entity_activity,
+    df_entity,
     names="Entity",
     values='Count'
 ).update_layout(
@@ -1157,7 +1282,7 @@ entity_pie = px.pie(
         color='black'
     )
 ).update_traces(
-    rotation=90,
+    rotation=0,
     textposition='auto',
     textinfo='value+percent',
     hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
