@@ -62,10 +62,8 @@ sheet = client.open_by_url(sheet_url)
 data = pd.DataFrame(client.open_by_url(sheet_url).sheet1.get_all_records())
 df = data.copy()
 
-# Trim leading and trailing whitespaces from column names
+# Strip whitespace
 df.columns = df.columns.str.strip()
-
-# Trim whitespace from values in all columns
 df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
 # Define a discrete color sequence
@@ -154,7 +152,7 @@ inplace=True)
 # -------------------------- MarCom Events --------------------------- #
 
 marcom_events = len(df)
-print("Total Marcom events:", marcom_events)
+# print("Total Marcom events:", marcom_events)
 
 # ---------------------------- MarCom Hours ---------------------------- #
 
@@ -182,8 +180,8 @@ marcom_hours=round(marcom_hours)
 
 df["Travel"] = (
     df["Travel"]
-    .replace('', np.nan)  # Replace empty strings
-    .fillna(0)       # Replace NaNs
+    .replace('', 0)  # Replace empty strings
+  
     .astype(float)   # Convert to float for summing in hours
 )
 
@@ -289,7 +287,7 @@ df['Person'] = (
         .astype(str)
         .str.strip()
         .replace({
-            'Felicia Chanlder', 'Felicia Chandler'
+            'Felicia Chanlder' : 'Felicia Chandler',
         })
     )
 
@@ -847,31 +845,6 @@ df['Outreach Activity'] = (
     })
 )
 
-# Define the function to map the entries to categories
-# def map_to_category(entry):
-#     entry = entry.lower()  # Normalize to lowercase to make matching case-insensitive
-#     if 'event' in entry and 'in-person' in entry:
-#         return "Event (in-person)"
-#     elif 'handout' in entry:
-#         return "Handouts"
-#     elif 'press release' in entry or 'psa' in entry:
-#         return "Press Releases"
-#     elif 'psa' in entry or 'commercial' in entry:
-#         return "PSA/ Commercial"
-#     elif 'social media' in entry:
-#         return "Social Media Post"
-#     elif 'videography' in entry:
-#         return "Videography"
-#     elif 'visual' in entry:
-#         return "Visuals"
-#     elif 'website' in entry:
-#         return "Website"
-#     else:
-#         return "None"  # In case there is no match
-
-# # Apply the mapping function to the entries in 'outreach_unique'
-# renamed_outreach = [map_to_category(entry) for entry in outreach_unique]
-
 # Identify unexpected/unapproved categories
 outreach_unexpected = df[~df['Outreach Activity'].isin(outreach_categories)]
 # print("Outreach Activity Unexpected: \n", outreach_unexpected['Outreach Activity'].unique().tolist())
@@ -891,10 +864,10 @@ for entry in df['Outreach Activity']:
 
 df_outreach = pd.DataFrame(counter.items(), columns=['Outreach Activity', 'Count']).sort_values(by='Count', ascending=False)
 
-# print("Outreach Activity Unique After:", df["Outreach Activity"].unique().tolist())
+# Filtered dataframe to exclude all rows = 'N/A':
+df_outreach = df_outreach[df_outreach['Outreach Activity'] != 'N/A']
 
-# Product Type dataframe:
-outreach_activity = df.groupby('Outreach Activity').size().reset_index(name='Count')
+# print("Outreach Activity Unique After:", df["Outreach Activity"].unique().tolist())
 
 outreach_bar = px.bar(
     df_outreach,
@@ -970,7 +943,7 @@ outreach_pie = px.pie(
 ).update_traces(
     rotation=0,
     textposition='auto',
-    textinfo='value+percent',
+    texttemplate='%{value} (%{percent:.2%})',
     hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
 )
 
